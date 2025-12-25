@@ -1,0 +1,73 @@
+.ant-btn {
+  transition: all 0.3s ease;
+}
+
+.page {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.9s ease, transform 0s ease;
+}
+
+.page-enter {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Shake animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+/* Apply shake to input with error */
+.ant-form-item-has-error .ant-input, 
+.ant-form-item-has-error .ant-input-affix-wrapper {
+  animation: shake 0.3s;
+  border-color: #f44336 !important; /* red error color */
+}
+
+/* Smooth focus animation */
+.ant-input:focus, 
+.ant-input-affix-wrapper:focus {
+  border-color: #4f46e5 !important; /* Primary theme color */
+  box-shadow: 0 0 0 2px rgba(79,70,229,0.2); /* subtle glow */
+  transition: all 0.3s ease;
+}
+
+/* Smooth transition for normal state */
+.ant-input, .ant-input-affix-wrapper {
+  transition: all 0.3s ease;
+}
+
+.feature-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.25s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: #d1d5db;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+}
+
+.hero {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.hero.animate {
+  opacity: 1;
+  transform: translateY(0);
+}
+
