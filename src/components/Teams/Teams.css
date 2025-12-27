@@ -1,0 +1,64 @@
+.teamSection {
+  padding: 80px 40px;
+  background: #ffffff;
+}
+
+.teamContainer {
+  max-width: 1250px;
+  margin: 0 auto;
+}
+
+.teamTitle {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+.teamSubtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin-bottom: 48px;
+  max-width: 600px;
+}
+
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 32px;
+}
+
+.teamCard {
+  text-align: center;
+  padding: 32px 24px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.teamCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.teamAvatar {
+  margin-bottom: 16px;
+}
+
+.memberName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.memberRole {
+  font-size: 14px;
+  color: #2563eb;
+  margin-bottom: 12px;
+}
+
+.memberBio {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}

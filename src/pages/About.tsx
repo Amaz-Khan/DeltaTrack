@@ -1,7 +1,8 @@
-import Navbar from "../components/Navbar";
-import Hero from "../components/Hero";
-import Features from "../components/Features";
-import Footer from "../components/Footer";
+import Navbar from "../components/Navbar/Navbar";
+import Hero from "../components/Hero/Hero";
+import Features from "../components/Features/Features";
+import Footer from "../components/Footer/Footer"
+import Teams from "../components/Teams/Teams";
 
 const About = () => {
     return (
@@ -9,6 +10,7 @@ const About = () => {
         <Navbar />
         <Hero />
         <Features />
+        <Teams/>
         <Footer />
         </>
     );

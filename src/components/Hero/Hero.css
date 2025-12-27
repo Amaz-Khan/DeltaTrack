@@ -1,0 +1,60 @@
+.hero {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 80px 1px;
+  background-image: url("../../assets/hero_bkg.jpg");
+  background-size: cover;
+  background-position: center;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+
+}
+
+.hero.animate {
+  animation: fadeUp 0.8s ease forwards;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.heroTagline {
+  font-size: 18px;
+  color: #6b7280;
+  max-width: 600px;
+  margin-bottom: 32px;
+}
+
+.heroTitle {
+  font-size: 48px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 16px;
+  max-width: 850px;
+}
+
+.heroDescription {
+  font-size: 18px;
+  color: #6b7280;
+  max-width: 750px;
+  margin-bottom: 32px;
+  line-height: 1.9;
+}
+
+.heroButton{
+    display: inline-block;
+}
+
+.heroNote {
+  font-size: 20px;
+  color: #6b7280;
+  margin-top: 25px;
+}

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {Link } from 'react-router-dom';
 import {Row, Col, Card, Form, Input, Button} from 'antd';
-import PageTransition from '../components/PageTransition';
-import Navbar from '../components/Navbar';
+import PageTransition from '../components/PageTransition/PageTransition';
+import Navbar from '../components/Navbar/Navbar';
 
 const Signup: React.FC = () => {
     const [loading, setLoading] = useState(false);
