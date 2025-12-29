@@ -15,15 +15,16 @@ const Team = () => {
       bio: "Passionate about building scalable and user-friendly interfaces.",
       avatar: "https://i.pravatar.cc/150?img=3",
     },
+
     {
-      name: "Zain Naeem",
+      name: "Zain Naeem Mir",
       role: "Backend Engineer",
       bio: "Focuses on performance, security, and clean architecture.",
       avatar: "https://i.pravatar.cc/150?img=6",
     },
     {
       name: "M. Moeez",
-      role: "Backend Engineer",
+      role: "Documentation Engineer",
       bio: "Focuses on performance, security, and clean architecture.",
       avatar: "https://i.pravatar.cc/150?img=8",
     },
