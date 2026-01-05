@@ -1,19 +1,15 @@
-import Navbar from "../components/Navbar/Navbar";
 import Hero from "../components/Hero/Hero";
 import Features from "../components/Features/Features";
-import Footer from "../components/Footer/Footer"
 import Teams from "../components/Teams/Teams";
 
 const About = () => {
-    return (
-        <>
-        <Navbar />
-        <Hero />
-        <Features />
-        <Teams/>
-        <Footer />
-        </>
-    );
+  return (
+    <>
+      <Hero />
+      <Features />
+      <Teams />
+    </>
+  );
 };
 
 export default About;

@@ -1,25 +1,34 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Row, Col, Card, Form, Input, Button } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import { Row, Col, Card, Form, Input, Button, message } from "antd";
 import PageTransition from "../components/PageTransition/PageTransition";
-import Navbar from "../components/Navbar/Navbar";
+import apiClient from "../services/apiClient";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-
-  const onFinish = (values: any) => {
+  const onFinish = async (values: any) => {
     setLoading(true);
 
-    setTimeout(() => {
-      console.log("Form Values", values);
+    try {
+      const response = await apiClient.post("/auth/login", {
+        email: values.email,
+        password: values.password,
+      });
+      message.success("Logged in successfully!");
+      navigate("/");
+    } catch (e: any) {
+      const errorMessage =
+        e.response?.data?.message || e.message || "Login failed";
+      message.error(errorMessage);
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   return (
     <>
-      <Navbar />
       <PageTransition>
         <Row
           style={{
@@ -42,7 +51,11 @@ const Login = () => {
                 boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
               }}
             >
-              <Form layout="vertical" onFinish={onFinish}>
+              <Form
+                layout="vertical"
+                onFinish={onFinish}
+                validateTrigger="onBlur"
+              >
                 <Form.Item
                   label="Email"
                   name="email"
