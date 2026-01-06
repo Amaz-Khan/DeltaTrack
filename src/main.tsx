@@ -6,6 +6,9 @@ import 'antd/dist/reset.css';
 import { ConfigProvider } from 'antd';
 import { BrowserRouter } from 'react-router-dom';
 
+import { Provider } from 'react-redux';
+import { store } from "./app/store";
+
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -19,7 +22,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     },
   }}
 >
+  <Provider store={store}>
   <App />
+  </Provider>
 </ConfigProvider>
     </BrowserRouter>
   </React.StrictMode>,

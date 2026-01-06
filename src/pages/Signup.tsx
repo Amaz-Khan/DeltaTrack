@@ -4,19 +4,34 @@ import {Row, Col, Card, Form, Input, Button} from 'antd';
 import PageTransition from '../components/PageTransition/PageTransition';
 import Navbar from '../components/Navbar/Navbar';
 
-const Signup: React.FC = () => {
-    const [loading, setLoading] = useState(false);
+import { useDispatch, useSelector } from "react-redux";
+import type  { RootState, AppDispatch } from "../app/store";
+import { startLoading, stopLoading } from "../features/auth/authSlice";
 
+const Signup: React.FC = () => {
+//     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
 
-    const onFinish = (values: any) => {
-        setLoading(true);
+//     const onFinish = (values: any) => {
+//         setLoading(true);
 
-        setTimeout(() => {
-            console.log('Form Values', values);
-            setLoading(false);
-        }, 2000);
-  };
+//         setTimeout(() => {
+//             console.log('Form Values', values);
+//             setLoading(false);
+//         }, 2000);
+//   };
+
+const dispatch = useDispatch<AppDispatch>();
+const loading = useSelector((state: RootState) => state.auth.loading);
+
+const onFinish = (values: any) => {
+  dispatch(startLoading());
+
+  setTimeout(() => {
+    console.log("Form Values", values);
+    dispatch(stopLoading());
+  }, 2000);
+};
 
     return (
         <>
