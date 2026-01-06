@@ -7,6 +7,12 @@ import About from "./pages/About";
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
 import Test from "./pages/Test";
+import DashboardLayout from "./components/DashboardLayout/DashboardLayout";
+import DashboardHome from "./pages/Dashboard/DashboardHome";
+import Errors from "./pages/Dashboard/Errors";
+import Setup from "./pages/Dashboard/Setup";
+import Settings from "./pages/Dashboard/Settings";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
 const Layout = () => {
   return (
@@ -29,6 +35,15 @@ const App = () => {
         <Route path="/signup-verify/*" element={<SignupVerify />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/test" element={<Test />} />
+      </Route>
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardHome />} />
+          <Route path="errors" element={<Errors />} />
+          <Route path="setup" element={<Setup />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

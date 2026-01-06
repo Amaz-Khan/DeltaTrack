@@ -3,10 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { Row, Col, Card, Form, Input, Button, message } from "antd";
 import PageTransition from "../components/PageTransition/PageTransition";
 import apiClient from "../services/apiClient";
+import { useAuthStore } from "../store/authStore";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const setTokens = useAuthStore((state) => state.setTokens);
+  const setUser = useAuthStore((state) => state.setUser);
 
   const onFinish = async (values: any) => {
     setLoading(true);
@@ -16,8 +19,15 @@ const Login = () => {
         email: values.email,
         password: values.password,
       });
+      const { accessToken, refreshToken, user } = response.data;
+      if (accessToken && refreshToken) {
+        setTokens(accessToken, refreshToken);
+      }
+      if (user) {
+        setUser(user);
+      }
       message.success("Logged in successfully!");
-      navigate("/");
+      navigate("/dashboard");
     } catch (e: any) {
       const errorMessage =
         e.response?.data?.message || e.message || "Login failed";

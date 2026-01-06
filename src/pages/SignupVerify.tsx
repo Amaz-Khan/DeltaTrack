@@ -20,8 +20,15 @@ const SignupVerify = () => {
         return;
       }
 
+      const tokenParts = tokens.split("/").filter(Boolean);
+      const accessToken = tokenParts[0];
+
       try {
-        await apiClient.get(`/auth/sign-up/confirm/${tokens}`);
+        await apiClient.get("/auth/sign-up/confirm", {
+          headers: {
+            Authorization: accessToken,
+          },
+        });
         setStatus("success");
       } catch (e: any) {
         setStatus("error");
