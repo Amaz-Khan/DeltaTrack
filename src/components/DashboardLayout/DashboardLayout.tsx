@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Layout, Menu, Button, theme } from "antd";
+import { Layout, Menu, Button, theme, Select, Space } from "antd";
 import {
   DashboardOutlined,
   BugOutlined,
@@ -9,19 +9,55 @@ import {
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  PlusOutlined,
+  AppstoreOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "../../store/authStore";
+import { useAppStore } from "../../store/appStore";
+import AddProjectModal from "../AddProjectModal/AddProjectModal";
+import apiClient from "../../services/apiClient";
 
 const { Header, Sider, Content } = Layout;
 
 const DashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [showAddProject, setShowAddProject] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const logout = useAuthStore((state) => state.logout);
+  const applications = useAppStore((state) => state.applications);
+  const selectedApp = useAppStore((state) => state.selectedApp);
+  const selectApp = useAppStore((state) => state.selectApp);
+  const setApplications = useAppStore((state) => state.setApplications);
+  const resetAppState = useAppStore((state) => state.resetAppState);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const response = await apiClient.get("/applications");
+        console.log(response, "This is the response I am getting");
+        const apps = response.data.map((app: any) => ({
+          id: app.id || app._id,
+          name: app.name,
+          projectKey: app.project_key,
+          createdAt: app.created_at,
+          userId: app.userId,
+        }));
+        console.log(apps, "The Apps are good.");
+        setApplications(apps);
+        if (apps.length > 0 && !selectedApp) {
+          selectApp(apps[0]);
+        }
+      } catch (e) {
+        console.error("Failed to fetch applications:", e);
+      }
+    };
+
+    fetchApplications();
+  }, []);
 
   const menuItems = [
     {
@@ -48,7 +84,13 @@ const DashboardLayout = () => {
 
   const handleLogout = () => {
     logout();
+    resetAppState();
     navigate("/login");
+  };
+
+  const handleAppChange = (appId: string) => {
+    const app = applications.find((a) => a.id === appId);
+    selectApp(app || null);
   };
 
   return (
@@ -125,7 +167,27 @@ const DashboardLayout = () => {
             onClick={() => setCollapsed(!collapsed)}
             style={{ fontSize: 16 }}
           />
-          <span style={{ fontWeight: 500 }}>Error Tracking Dashboard</span>
+          <Space>
+            <AppstoreOutlined />
+            <Select
+              placeholder="Select Project"
+              value={selectedApp?.id}
+              onChange={handleAppChange}
+              style={{ width: 200 }}
+              options={applications.map((app) => ({
+                value: app.id,
+                label: app.name,
+              }))}
+              notFoundContent="No projects"
+            />
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setShowAddProject(true)}
+            >
+              New Project
+            </Button>
+          </Space>
           <div style={{ width: 32 }} />
         </Header>
         <Content
@@ -140,6 +202,10 @@ const DashboardLayout = () => {
           <Outlet />
         </Content>
       </Layout>
+      <AddProjectModal
+        open={showAddProject}
+        onClose={() => setShowAddProject(false)}
+      />
     </Layout>
   );
 };

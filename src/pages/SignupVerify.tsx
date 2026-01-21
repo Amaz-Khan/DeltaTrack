@@ -1,45 +1,84 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Row, Col, Card, Spin, Result, Button } from "antd";
+import { Row, Col, Card, Spin, Result, Button, Space } from "antd";
 import PageTransition from "../components/PageTransition/PageTransition";
 import apiClient from "../services/apiClient";
 
 const SignupVerify = () => {
-  const { "*": tokens } = useParams();
+  const { "*": pathTokens } = useParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState<"loading" | "success" | "error">(
-    "loading"
-  );
+  const [status, setStatus] = useState<
+    "loading" | "success" | "error" | "expired"
+  >("loading");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const verifySignup = async () => {
-      if (!tokens) {
+      if (!pathTokens) {
         setStatus("error");
-        setErrorMessage("Invalid verification link");
+        setErrorMessage("Invalid verification link - no token found");
         return;
       }
 
-      const tokenParts = tokens.split("/").filter(Boolean);
+      // URL format: /signup-verify/{accessToken}/{refreshToken}
+      const tokenParts = pathTokens.split("/").filter(Boolean);
       const accessToken = tokenParts[0];
 
-      try {
-        await apiClient.get("/auth/sign-up/confirm", {
-          headers: {
-            Authorization: accessToken,
-          },
-        });
-        setStatus("success");
-      } catch (e: any) {
+      if (!accessToken) {
         setStatus("error");
-        setErrorMessage(
-          e.response?.data?.message || e.message || "Verification failed"
+        setErrorMessage("Invalid verification link - missing access token");
+        return;
+      }
+
+      try {
+        // Create a fresh axios instance to avoid interceptor adding old tokens
+        const response = await fetch(
+          `${import.meta.env.VITE_APP_BASE_URL}/auth/sign-up/confirm`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: accessToken,
+              "Content-Type": "application/json",
+            },
+          },
         );
+
+        const data = await response.json();
+        console.log("Verification response:", response.status, data);
+
+        if (response.ok) {
+          setStatus("success");
+        } else {
+          throw { response: { data, status: response.status } };
+        }
+      } catch (e: any) {
+        console.error("Verification error:", e.response?.data || e);
+
+        const errorData = e.response?.data;
+
+        // Check if token expired
+        if (
+          errorData?.error?.name === "TokenExpiredError" ||
+          errorData?.error?.message?.includes("expired") ||
+          errorData?.message?.includes("expired")
+        ) {
+          setStatus("expired");
+          setErrorMessage(
+            "Your verification link has expired. Please sign up again to receive a new link.",
+          );
+        } else {
+          setStatus("error");
+          setErrorMessage(
+            errorData?.error?.message ||
+              errorData?.message ||
+              "Verification failed. Please try again.",
+          );
+        }
       }
     };
 
     verifySignup();
-  }, [tokens]);
+  }, [pathTokens]);
 
   return (
     <PageTransition>
@@ -88,6 +127,24 @@ const SignupVerify = () => {
                   <Button type="primary" onClick={() => navigate("/signup")}>
                     Try Again
                   </Button>
+                }
+              />
+            )}
+
+            {status === "expired" && (
+              <Result
+                status="warning"
+                title="Link Expired"
+                subTitle="Your verification link has expired. Please sign up again to receive a new verification email."
+                extra={
+                  <Space>
+                    <Button type="primary" onClick={() => navigate("/signup")}>
+                      Sign Up Again
+                    </Button>
+                    <Button onClick={() => navigate("/login")}>
+                      Go to Login
+                    </Button>
+                  </Space>
                 }
               />
             )}
