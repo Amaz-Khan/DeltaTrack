@@ -13,7 +13,7 @@ import {
   AppstoreOutlined,
 } from "@ant-design/icons";
 import { useAuthStore } from "../../store/authStore";
-import { useAppStore } from "../../store/appStore";
+import { useAppStore, Application } from "../../store/appStore";
 import AddProjectModal from "../AddProjectModal/AddProjectModal";
 import apiClient from "../../services/apiClient";
 
@@ -38,17 +38,37 @@ const DashboardLayout = () => {
     const fetchApplications = async () => {
       try {
         const response = await apiClient.get("/applications");
-        console.log(response, "This is the response I am getting");
-        const apps = response.data.map((app: any) => ({
-          id: app.id || app._id,
-          name: app.name,
-          projectKey: app.project_key,
-          createdAt: app.created_at,
-          userId: app.userId,
-        }));
-        console.log(apps, "The Apps are good.");
+        console.log("Raw API response:", response.data);
+
+        // Handle both array response and object with applications array
+        const appsData = Array.isArray(response.data)
+          ? response.data
+          : response.data.applications || response.data.data || [];
+
+        const apps = appsData.map((app: any) => {
+          console.log("Processing app:", app);
+          return {
+            id: String(app.id || app._id),
+            name: app.name || app.project_name || "Unnamed Project",
+            projectKey: app.project_key || app.projectKey || "",
+            createdAt: app.created_at || app.createdAt,
+            userId: app.userId || app.user_id,
+          };
+        });
+
+        console.log("Mapped apps:", apps);
+
+        // Always update with fresh data from API
         setApplications(apps);
-        if (apps.length > 0 && !selectedApp) {
+
+        // If API returns empty, clear selected app too
+        if (apps.length === 0) {
+          selectApp(null);
+        } else if (
+          !selectedApp ||
+          !apps.find((a: Application) => a.id === selectedApp.id)
+        ) {
+          // Select first app if no app selected or selected app no longer exists
           selectApp(apps[0]);
         }
       } catch (e) {

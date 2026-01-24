@@ -1,19 +1,61 @@
-import { Typography, Card, Tabs, Empty, Alert } from "antd";
+import {
+  Typography,
+  Card,
+  Tabs,
+  Empty,
+  Alert,
+  Select,
+  Space,
+  Row,
+  Col,
+} from "antd";
+import { AppstoreOutlined } from "@ant-design/icons";
 import { useAppStore } from "../../store/appStore";
 
 const { Title, Text, Paragraph } = Typography;
 
 const Setup = () => {
   const selectedApp = useAppStore((state) => state.selectedApp);
+  const applications = useAppStore((state) => state.applications);
+  const selectApp = useAppStore((state) => state.selectApp);
+
+  const handleAppChange = (appId: string) => {
+    const app = applications.find((a) => a.id === appId);
+    if (app) {
+      selectApp(app);
+    }
+  };
+
+  if (!selectedApp && applications.length === 0) {
+    return (
+      <div>
+        <Title level={3}>Setup Instructions</Title>
+        <Empty
+          description="No projects found. Create a project first to view setup instructions."
+          style={{ marginTop: 60 }}
+        />
+      </div>
+    );
+  }
 
   if (!selectedApp) {
     return (
       <div>
         <Title level={3}>Setup Instructions</Title>
-        <Empty
-          description="Select a project to view setup instructions"
-          style={{ marginTop: 60 }}
-        />
+        <Card style={{ marginTop: 16 }}>
+          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+            <Text>Select a project to view setup instructions:</Text>
+            <Select
+              placeholder="Select Project"
+              onChange={handleAppChange}
+              style={{ width: 300 }}
+              options={applications.map((app) => ({
+                value: app.id,
+                label: app.name,
+              }))}
+            />
+          </Space>
+        </Card>
       </div>
     );
   }
@@ -45,10 +87,30 @@ try {
 
   return (
     <div>
-      <Title level={3}>Setup Instructions</Title>
-      <Text type="secondary">
-        Follow the steps below to integrate DeltaTrack into your application
-      </Text>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+          <Title level={3} style={{ margin: 0 }}>
+            Setup Instructions
+          </Title>
+          <Text type="secondary">
+            Follow the steps below to integrate DeltaTrack into your application
+          </Text>
+        </Col>
+        <Col>
+          <Space>
+            <AppstoreOutlined style={{ color: "#6366f1" }} />
+            <Select
+              value={selectedApp.id}
+              onChange={handleAppChange}
+              style={{ width: 220 }}
+              options={applications.map((app) => ({
+                value: app.id,
+                label: app.name,
+              }))}
+            />
+          </Space>
+        </Col>
+      </Row>
 
       <Alert
         message={`Project: ${selectedApp.name}`}
@@ -62,7 +124,7 @@ try {
         }
         type="info"
         showIcon
-        style={{ marginTop: 16 }}
+        style={{ marginBottom: 24 }}
       />
 
       <Tabs

@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, message } from "antd";
 import { KeyOutlined } from "@ant-design/icons";
 import apiClient from "../../services/apiClient";
 import { useAppStore } from "../../store/appStore";
+import { useAuthStore } from "../../store/authStore";
 
 interface AddProjectModalProps {
   open: boolean;
@@ -13,6 +14,7 @@ const AddProjectModal = ({ open, onClose }: AddProjectModalProps) => {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const addApplication = useAppStore((state) => state.addApplication);
+  const user = useAuthStore((state) => state.user);
 
   const generateProjectKey = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -28,22 +30,30 @@ const AddProjectModal = ({ open, onClose }: AddProjectModalProps) => {
       const values = await form.validateFields();
       setLoading(true);
 
+      // User is determined from auth token on the backend
       const response = await apiClient.post("/applications", {
         name: values.name,
         projectKey: values.projectKey,
       });
 
+      console.log("Create project response:", response.data);
+
       const newApp = response.data;
+      // Use the ID from the API response (could be numeric or string)
+      const appId = newApp.id ?? newApp._id ?? Date.now();
+
       addApplication({
-        id: newApp.id || newApp._id || Date.now().toString(),
-        name: values.name,
-        projectKey: values.projectKey,
+        id: String(appId),
+        name: newApp.name || values.name,
+        projectKey:
+          newApp.projectKey || newApp.project_key || values.projectKey,
       });
 
       message.success("Project created successfully!");
       form.resetFields();
       onClose();
     } catch (e: any) {
+      console.error("Failed to create project:", e);
       const errorMessage =
         e.response?.data?.message || e.message || "Failed to create project";
       message.error(errorMessage);

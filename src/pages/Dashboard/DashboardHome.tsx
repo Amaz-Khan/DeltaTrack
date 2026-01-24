@@ -41,8 +41,11 @@ dayjs.extend(isBetween);
 const { Title, Text } = Typography;
 
 const DashboardHome = () => {
+  // === ALL HOOKS MUST BE CALLED FIRST, BEFORE ANY CONDITIONAL RETURNS ===
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [timeRange, setTimeRange] = useState<string | number>("7d");
+
+  // Store hooks
   const applications = useAppStore((state) => state.applications);
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
@@ -53,12 +56,14 @@ const DashboardHome = () => {
   const isLoadingErrors = useAppStore((state) => state.isLoadingErrors);
   const setLoadingErrors = useAppStore((state) => state.setLoadingErrors);
 
+  // Onboarding effect
   useEffect(() => {
     if (!hasCompletedOnboarding && applications.length === 0) {
       setShowOnboarding(true);
     }
   }, [hasCompletedOnboarding, applications]);
 
+  // Error fetching effect
   useEffect(() => {
     const fetchErrors = async () => {
       if (!selectedApp) {
@@ -68,23 +73,46 @@ const DashboardHome = () => {
 
       setLoadingErrors(true);
       try {
-        const response = await apiClient.get(`/events/${selectedApp.id}`);
-        const eventsData = response.data.events || response.data || [];
+        // The API expects applicationId as a number in the path
+        const appId = selectedApp.id;
+        console.log("Fetching events for applicationId:", appId);
+
+        const response = await apiClient.get(`/events/${appId}`);
+        console.log("Events API response:", response.data);
+
+        // Handle various response formats
+        let eventsData: any[] = [];
+        if (Array.isArray(response.data)) {
+          eventsData = response.data;
+        } else if (response.data?.events) {
+          eventsData = response.data.events;
+        } else if (response.data?.data) {
+          eventsData = response.data.data;
+        }
+
+        console.log("Parsed events data:", eventsData);
+
         const formattedErrors: ErrorEvent[] = eventsData.map((event: any) => ({
-          id: event.id || event._id || String(Math.random()),
+          id: String(event.id || event._id || Math.random()),
           type: event.type || "error",
           message: event.message || "Unknown error",
           stack: event.stack,
           url: event.source || event.url,
           lineno: event.lineno,
           colno: event.colno,
-          timestamp: event.timestamp || event.createdAt,
+          timestamp:
+            event.timestamp || event.createdAt || new Date().toISOString(),
           environment: event.environment,
-          applicationId: event.applicationId,
+          applicationId: String(
+            event.applicationId || event.application_id || appId,
+          ),
         }));
+
+        console.log("Formatted errors:", formattedErrors);
         setErrors(formattedErrors);
-      } catch (e) {
+      } catch (e: any) {
         console.error("Failed to fetch errors:", e);
+        console.error("Error response:", e.response?.data);
         setErrors([]);
       } finally {
         setLoadingErrors(false);
@@ -92,35 +120,22 @@ const DashboardHome = () => {
     };
 
     fetchErrors();
-  }, [selectedApp]);
+  }, [selectedApp, setErrors, setLoadingErrors]);
 
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false);
-  };
+  // Error counts memo - must be called unconditionally
+  const errorCounts = useMemo(() => {
+    const counts: Record<string, { count: number; message: string }> = {};
+    errors.forEach((e) => {
+      const key = e.message.substring(0, 50);
+      if (!counts[key]) {
+        counts[key] = { count: 0, message: e.message };
+      }
+      counts[key].count++;
+    });
+    return Object.values(counts).sort((a, b) => b.count - a.count);
+  }, [errors]);
 
-  if (!selectedApp && applications.length === 0) {
-    return (
-      <>
-        <OnboardingModal
-          open={showOnboarding}
-          onComplete={handleOnboardingComplete}
-        />
-        <div style={{ textAlign: "center", paddingTop: 100 }}>
-          <Empty
-            description={
-              <span>
-                No projects yet.{" "}
-                <a onClick={() => setShowOnboarding(true)}>
-                  Create your first project
-                </a>
-              </span>
-            }
-          />
-        </div>
-      </>
-    );
-  }
-
+  // === DERIVED VALUES (computed from state, safe to compute before return) ===
   const totalErrors = errors.length;
   const last24Hours = errors.filter((e) =>
     dayjs(e.timestamp).isAfter(dayjs().subtract(24, "hours")),
@@ -145,22 +160,14 @@ const DashboardHome = () => {
         )
       : 0;
 
-  // Most common error
-  const errorCounts = useMemo(() => {
-    const counts: Record<string, { count: number; message: string }> = {};
-    errors.forEach((e) => {
-      const key = e.message.substring(0, 50);
-      if (!counts[key]) {
-        counts[key] = { count: 0, message: e.message };
-      }
-      counts[key].count++;
-    });
-    return Object.values(counts).sort((a, b) => b.count - a.count);
-  }, [errors]);
-
   const mostCommonError = errorCounts[0];
 
-  // Get errors by time range
+  // Handler
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+  };
+
+  // === HELPER FUNCTIONS ===
   const getTimeRangeData = () => {
     if (timeRange === "24h") {
       return { days: 1, format: "HH:00", unit: "hours" as const, count: 24 };
@@ -252,11 +259,11 @@ const DashboardHome = () => {
     return Object.entries(envs).map(([environment, count]) => ({
       environment,
       count,
-      percentage: Math.round((count / totalErrors) * 100),
+      percentage: Math.round((count / totalErrors) * 100) || 0,
     }));
   };
 
-  // Color themes
+  // === CHART CONFIGURATIONS ===
   const chartColors = {
     primary: "#6366f1",
     error: "#ef4444",
@@ -460,6 +467,33 @@ const DashboardHome = () => {
     },
   ];
 
+  // === CONDITIONAL RENDERING (after all hooks) ===
+
+  // No projects - show onboarding prompt
+  if (!selectedApp && applications.length === 0) {
+    return (
+      <>
+        <OnboardingModal
+          open={showOnboarding}
+          onComplete={handleOnboardingComplete}
+        />
+        <div style={{ textAlign: "center", paddingTop: 100 }}>
+          <Empty
+            description={
+              <span>
+                No projects yet.{" "}
+                <a onClick={() => setShowOnboarding(true)}>
+                  Create your first project
+                </a>
+              </span>
+            }
+          />
+        </div>
+      </>
+    );
+  }
+
+  // Main dashboard render
   return (
     <>
       <OnboardingModal
@@ -499,7 +533,7 @@ const DashboardHome = () => {
                     title={<span style={{ color: "#666" }}>Total Errors</span>}
                     value={totalErrors}
                     prefix={<BugOutlined style={{ color: "#ef4444" }} />}
-                    valueStyle={{ color: "#ef4444", fontWeight: 700 }}
+                    styles={{ content: { color: "#ef4444", fontWeight: 700 } }}
                   />
                 </Card>
               </Col>
@@ -518,7 +552,7 @@ const DashboardHome = () => {
                     prefix={
                       <ClockCircleOutlined style={{ color: "#f59e0b" }} />
                     }
-                    valueStyle={{ color: "#f59e0b", fontWeight: 700 }}
+                    styles={{ content: { color: "#f59e0b", fontWeight: 700 } }}
                   />
                 </Card>
               </Col>
@@ -535,7 +569,7 @@ const DashboardHome = () => {
                     title={<span style={{ color: "#666" }}>Last 7 Days</span>}
                     value={last7Days}
                     prefix={<WarningOutlined style={{ color: "#3b82f6" }} />}
-                    valueStyle={{ color: "#3b82f6", fontWeight: 700 }}
+                    styles={{ content: { color: "#3b82f6", fontWeight: 700 } }}
                     suffix={
                       trendPercentage !== 0 && (
                         <Tooltip
@@ -577,7 +611,7 @@ const DashboardHome = () => {
                     prefix={
                       <ThunderboltOutlined style={{ color: "#10b981" }} />
                     }
-                    valueStyle={{ color: "#10b981", fontWeight: 700 }}
+                    styles={{ content: { color: "#10b981", fontWeight: 700 } }}
                   />
                 </Card>
               </Col>

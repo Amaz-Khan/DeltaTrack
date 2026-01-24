@@ -16,6 +16,7 @@ import {
 } from "@ant-design/icons";
 import apiClient from "../../services/apiClient";
 import { useAppStore } from "../../store/appStore";
+import { useAuthStore } from "../../store/authStore";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -33,6 +34,7 @@ const OnboardingModal = ({ open, onComplete }: OnboardingModalProps) => {
     projectKey: string;
   } | null>(null);
   const addApplication = useAppStore((state) => state.addApplication);
+  const user = useAuthStore((state) => state.user);
 
   const generateProjectKey = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -48,22 +50,33 @@ const OnboardingModal = ({ open, onComplete }: OnboardingModalProps) => {
       const values = await form.validateFields();
       setLoading(true);
 
+      // User is determined from auth token on the backend
       const response = await apiClient.post("/applications", {
         name: values.name,
         projectKey: values.projectKey,
       });
 
+      console.log("Onboarding create project response:", response.data);
+
       const newApp = response.data;
+      const appId = newApp.id ?? newApp._id ?? Date.now();
+
       addApplication({
-        id: newApp.id || newApp._id || Date.now().toString(),
-        name: values.name,
-        projectKey: values.projectKey,
+        id: String(appId),
+        name: newApp.name || values.name,
+        projectKey:
+          newApp.projectKey || newApp.project_key || values.projectKey,
       });
 
-      setCreatedApp({ name: values.name, projectKey: values.projectKey });
+      setCreatedApp({
+        name: newApp.name || values.name,
+        projectKey:
+          newApp.projectKey || newApp.project_key || values.projectKey,
+      });
       message.success("Application created successfully!");
       setCurrentStep(1);
     } catch (e: any) {
+      console.error("Failed to create application:", e);
       const errorMessage =
         e.response?.data?.message ||
         e.message ||
