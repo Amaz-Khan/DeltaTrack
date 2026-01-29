@@ -26,6 +26,7 @@ import {
 } from "@ant-design/icons";
 import { Line, Pie, Column, Area, Heatmap } from "@ant-design/charts";
 import OnboardingModal from "../../components/OnboardingModal/OnboardingModal";
+import AISummary from "../../components/AISummary";
 import { useAppStore, ErrorEvent } from "../../store/appStore";
 import apiClient from "../../services/apiClient";
 import dayjs from "dayjs";
@@ -92,23 +93,30 @@ const DashboardHome = () => {
 
         console.log("Parsed events data:", eventsData);
 
-        const formattedErrors: ErrorEvent[] = eventsData.map((event: any) => ({
-          id: String(event.id || event._id || Math.random()),
-          type: event.type || "error",
-          message: event.message || "Unknown error",
-          stack: event.stack,
-          url: event.source || event.url,
-          lineno: event.lineno,
-          colno: event.colno,
-          timestamp:
-            event.timestamp || event.createdAt || new Date().toISOString(),
-          environment: event.environment,
-          applicationId: String(
-            event.applicationId || event.application_id || appId,
-          ),
-        }));
+        const formattedErrors: ErrorEvent[] = eventsData.map((event: any) => {
+          let eventType = event.type;
+          if (!eventType || eventType.trim() === "") {
+            eventType = "error";
+          }
+          return {
+            id: String(event.id || event._id || Math.random()),
+            type: eventType,
+            message: event.message || "Unknown error",
+            stack: event.stack,
+            url: event.source || event.url,
+            lineno: event.lineno,
+            colno: event.colno,
+            timestamp:
+              event.timestamp || event.createdAt || new Date().toISOString(),
+            environment: event.environment,
+            applicationId: String(
+              event.applicationId || event.application_id || appId,
+            ),
+          };
+        });
 
         console.log("Formatted errors:", formattedErrors);
+        console.log("Errors:", errors);
         setErrors(formattedErrors);
       } catch (e: any) {
         console.error("Failed to fetch errors:", e);
@@ -199,7 +207,7 @@ const DashboardHome = () => {
   const getErrorsByType = () => {
     const types: { [key: string]: number } = {};
     errors.forEach((error) => {
-      const type = error.type || "Unknown";
+      const type = error.type || "error";
       types[type] = (types[type] || 0) + 1;
     });
     return Object.entries(types)
@@ -249,20 +257,6 @@ const DashboardHome = () => {
     return data;
   };
 
-  // Get environment distribution
-  const getErrorsByEnvironment = () => {
-    const envs: { [key: string]: number } = {};
-    errors.forEach((error) => {
-      const env = error.environment || "unknown";
-      envs[env] = (envs[env] || 0) + 1;
-    });
-    return Object.entries(envs).map(([environment, count]) => ({
-      environment,
-      count,
-      percentage: Math.round((count / totalErrors) * 100) || 0,
-    }));
-  };
-
   // === CHART CONFIGURATIONS ===
   const chartColors = {
     primary: "#6366f1",
@@ -285,7 +279,7 @@ const DashboardHome = () => {
       },
     },
     areaStyle: () => ({
-      fill: `l(270) 0:#ffffff 0.5:${chartColors.error}30 1:${chartColors.error}`,
+      fill: `l(90) 0:rgba(239, 68, 68, 0.1) 0.5:rgba(239, 68, 68, 0.3) 1:rgba(239, 68, 68, 0.6)`,
     }),
     point: {
       size: 4,
@@ -688,64 +682,11 @@ const DashboardHome = () => {
                 >
                   <Area {...areaConfig} />
                 </Card>
-
-                <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-                  <Col xs={24} lg={12}>
-                    <Card title="🔥 Errors by Type">
-                      <Pie {...pieConfig} />
-                    </Card>
-                  </Col>
-                  <Col xs={24} lg={12}>
-                    <Card title="📊 Error Distribution by Environment">
-                      <div style={{ padding: "16px 0" }}>
-                        {getErrorsByEnvironment().map((env) => (
-                          <div
-                            key={env.environment}
-                            style={{ marginBottom: 16 }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                marginBottom: 4,
-                              }}
-                            >
-                              <Tag
-                                color={
-                                  env.environment === "production"
-                                    ? "red"
-                                    : env.environment === "staging"
-                                      ? "orange"
-                                      : "green"
-                                }
-                              >
-                                {env.environment}
-                              </Tag>
-                              <Text type="secondary">
-                                {env.count} errors ({env.percentage}%)
-                              </Text>
-                            </div>
-                            <Progress
-                              percent={env.percentage}
-                              showInfo={false}
-                              strokeColor={
-                                env.environment === "production"
-                                  ? "#ef4444"
-                                  : env.environment === "staging"
-                                    ? "#f59e0b"
-                                    : "#10b981"
-                              }
-                              trailColor="#f0f0f0"
-                            />
-                          </div>
-                        ))}
-                        {getErrorsByEnvironment().length === 0 && (
-                          <Empty description="No environment data" />
-                        )}
-                      </div>
-                    </Card>
-                  </Col>
-                </Row>
+                {/* AI Error Analysis */}
+                <AISummary
+                  applicationId={selectedApp?.id}
+                  timeRange={timeRange as string}
+                />
 
                 <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
                   <Col xs={24} lg={14}>
