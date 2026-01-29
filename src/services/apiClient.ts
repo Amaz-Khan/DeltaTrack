@@ -25,8 +25,11 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const accessToken = useAuthStore.getState().accessToken;
-    if (accessToken) {
-      config.headers.Authorization = accessToken;
+    const url = config.url || "";
+    const isAuthRoute =
+      url.includes("/auth/login") || url.includes("/auth/sign-up");
+    if (accessToken && !isAuthRoute) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },

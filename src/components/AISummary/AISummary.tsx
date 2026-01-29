@@ -11,6 +11,8 @@ import {
   Tooltip,
   Divider,
   Statistic,
+  Select,
+  Space,
 } from "antd";
 import {
   RobotOutlined,
@@ -58,6 +60,9 @@ const AISummary = ({ applicationId, timeRange = "7d" }: AISummaryProps) => {
     null,
   );
   const [error, setError] = useState<string | null>(null);
+  const [summaryRange, setSummaryRange] = useState<"7d" | "30d">(
+    timeRange === "30d" ? "30d" : "7d",
+  );
 
   const parseAISummary = (aiSummary: string): ParsedSummary => {
     const sections = aiSummary.split(/\n\n(?=[A-Z])/);
@@ -144,7 +149,7 @@ const AISummary = ({ applicationId, timeRange = "7d" }: AISummaryProps) => {
       const response = await apiClient.get(`/ai/errors-summary`, {
         params: {
           applicationId,
-          timeRange,
+          timeRange: summaryRange,
         },
       });
 
@@ -172,10 +177,16 @@ const AISummary = ({ applicationId, timeRange = "7d" }: AISummaryProps) => {
   };
 
   useEffect(() => {
+    if (timeRange === "7d" || timeRange === "30d") {
+      setSummaryRange(timeRange);
+    }
+  }, [timeRange]);
+
+  useEffect(() => {
     if (applicationId) {
       fetchSummary();
     }
-  }, [applicationId, timeRange]);
+  }, [applicationId, summaryRange]);
 
   const getTypeIcon = (type: string) => {
     switch (type.toLowerCase()) {
@@ -214,15 +225,32 @@ const AISummary = ({ applicationId, timeRange = "7d" }: AISummaryProps) => {
             </div>
             <span>AI Error Analysis</span>
           </div>
-          <Tooltip title="Regenerate analysis">
-            <Button
-              type="text"
-              icon={<ReloadOutlined spin={loading} />}
-              onClick={fetchSummary}
-              disabled={loading}
-              size="small"
-            />
-          </Tooltip>
+          <Space size={8}>
+            <div className="ai-range-control">
+              <Text type="secondary" className="ai-range-label">
+                Range
+              </Text>
+              <Select
+                size="small"
+                value={summaryRange}
+                onChange={(value) => setSummaryRange(value)}
+                className="ai-range-select"
+                options={[
+                  { label: "Week", value: "7d" },
+                  { label: "Month", value: "30d" },
+                ]}
+              />
+            </div>
+            <Tooltip title="Regenerate analysis">
+              <Button
+                type="text"
+                icon={<ReloadOutlined spin={loading} />}
+                onClick={fetchSummary}
+                disabled={loading}
+                size="small"
+              />
+            </Tooltip>
+          </Space>
         </div>
       }
       className="ai-summary-card-v2"
@@ -256,49 +284,6 @@ const AISummary = ({ applicationId, timeRange = "7d" }: AISummaryProps) => {
       ) : data && parsedSummary ? (
         <div className="ai-content-v2">
           {/* Stats Row */}
-          <Row gutter={[16, 16]} className="ai-stats-row">
-            <Col xs={12} sm={6}>
-              <div className="ai-stat-card">
-                <Statistic
-                  title="Total Events"
-                  value={data.total}
-                  prefix={<ThunderboltOutlined />}
-                  valueStyle={{ color: "#6366f1", fontSize: 24 }}
-                />
-              </div>
-            </Col>
-            {Object.entries(data.byType).map(([type, count]) => (
-              <Col xs={12} sm={6} key={type}>
-                <div className="ai-stat-card">
-                  <Statistic
-                    title={type.charAt(0).toUpperCase() + type.slice(1) + "s"}
-                    value={count}
-                    prefix={getTypeIcon(type)}
-                    valueStyle={{ color: getTypeColor(type), fontSize: 24 }}
-                  />
-                </div>
-              </Col>
-            ))}
-            <Col xs={12} sm={6}>
-              <div className="ai-stat-card">
-                <div className="ai-time-range">
-                  <ClockCircleOutlined
-                    style={{ fontSize: 18, color: "#8b5cf6" }}
-                  />
-                  <div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Analysis Period
-                    </Text>
-                    <br />
-                    <Text strong style={{ fontSize: 13 }}>
-                      {new Date(data.from).toLocaleDateString()} -{" "}
-                      {new Date(data.to).toLocaleDateString()}
-                    </Text>
-                  </div>
-                </div>
-              </div>
-            </Col>
-          </Row>
 
           {/* High-Level Summary */}
           <div className="ai-section summary-section-v2">
@@ -370,10 +355,6 @@ const AISummary = ({ applicationId, timeRange = "7d" }: AISummaryProps) => {
           {parsedSummary.suggestions.length > 0 && (
             <div className="ai-section recommendations-section-v2">
               <div className="ai-section-header">
-                <RocketOutlined
-                  className="section-icon-v2"
-                  style={{ color: "#22c55e" }}
-                />
                 <Text strong>Recommended Actions</Text>
               </div>
               <div className="recommendations-list-v2">

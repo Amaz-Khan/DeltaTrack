@@ -44,12 +44,16 @@ const { Title, Text } = Typography;
 const DashboardHome = () => {
   // === ALL HOOKS MUST BE CALLED FIRST, BEFORE ANY CONDITIONAL RETURNS ===
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const [timeRange, setTimeRange] = useState<string | number>("7d");
 
   // Store hooks
   const applications = useAppStore((state) => state.applications);
   const hasCompletedOnboarding = useAppStore(
     (state) => state.hasCompletedOnboarding,
+  );
+  const isLoadingApplications = useAppStore(
+    (state) => state.isLoadingApplications,
   );
   const selectedApp = useAppStore((state) => state.selectedApp);
   const errors = useAppStore((state) => state.errors);
@@ -59,10 +63,22 @@ const DashboardHome = () => {
 
   // Onboarding effect
   useEffect(() => {
-    if (!hasCompletedOnboarding && applications.length === 0) {
+    if (
+      !onboardingDismissed &&
+      !isLoadingApplications &&
+      !hasCompletedOnboarding &&
+      applications.length === 0 &&
+      !showOnboarding
+    ) {
       setShowOnboarding(true);
     }
-  }, [hasCompletedOnboarding, applications]);
+  }, [
+    applications,
+    hasCompletedOnboarding,
+    isLoadingApplications,
+    onboardingDismissed,
+    showOnboarding,
+  ]);
 
   // Error fetching effect
   useEffect(() => {
@@ -175,6 +191,11 @@ const DashboardHome = () => {
     setShowOnboarding(false);
   };
 
+  const handleOnboardingCancel = () => {
+    setShowOnboarding(false);
+    setOnboardingDismissed(true);
+  };
+
   // === HELPER FUNCTIONS ===
   const getTimeRangeData = () => {
     if (timeRange === "24h") {
@@ -272,22 +293,25 @@ const DashboardHome = () => {
     xField: "date",
     yField: "count",
     smooth: true,
-    line: {
-      style: {
-        stroke: chartColors.error,
-        lineWidth: 3,
+    interaction: {
+      tooltip: {
+        marker: false,
       },
     },
-    areaStyle: () => ({
-      fill: `l(90) 0:rgba(239, 68, 68, 0.1) 0.5:rgba(239, 68, 68, 0.3) 1:rgba(239, 68, 68, 0.6)`,
-    }),
+    style: {
+      fill: `linear-gradient(-90deg, #ffffff 0%, ${chartColors.error} 100%)`,
+    },
+    line: {
+      style: {
+        stroke: "#000035",
+        lineWidth: 2,
+      },
+    },
     point: {
       size: 4,
-      shape: "circle",
       style: {
-        fill: chartColors.error,
-        stroke: "#fff",
-        lineWidth: 2,
+        stroke: "#000035",
+        fill: "#000035",
       },
     },
     height: 280,
@@ -463,6 +487,21 @@ const DashboardHome = () => {
 
   // === CONDITIONAL RENDERING (after all hooks) ===
 
+  if (isLoadingApplications) {
+    return (
+      <>
+        <OnboardingModal
+          open={showOnboarding}
+          onComplete={handleOnboardingComplete}
+          onCancel={handleOnboardingCancel}
+        />
+        <div style={{ textAlign: "center", paddingTop: 100 }}>
+          <Spin size="large" />
+        </div>
+      </>
+    );
+  }
+
   // No projects - show onboarding prompt
   if (!selectedApp && applications.length === 0) {
     return (
@@ -470,6 +509,7 @@ const DashboardHome = () => {
         <OnboardingModal
           open={showOnboarding}
           onComplete={handleOnboardingComplete}
+          onCancel={handleOnboardingCancel}
         />
         <div style={{ textAlign: "center", paddingTop: 100 }}>
           <Empty
@@ -493,6 +533,7 @@ const DashboardHome = () => {
       <OnboardingModal
         open={showOnboarding}
         onComplete={handleOnboardingComplete}
+        onCancel={handleOnboardingCancel}
       />
       <div>
         <div style={{ marginBottom: 24 }}>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Modal,
   Form,
@@ -8,6 +8,7 @@ import {
   Typography,
   Card,
   message,
+  Space,
 } from "antd";
 import {
   RocketOutlined,
@@ -23,9 +24,14 @@ const { Title, Text, Paragraph } = Typography;
 interface OnboardingModalProps {
   open: boolean;
   onComplete: () => void;
+  onCancel?: () => void;
 }
 
-const OnboardingModal = ({ open, onComplete }: OnboardingModalProps) => {
+const OnboardingModal = ({
+  open,
+  onComplete,
+  onCancel,
+}: OnboardingModalProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
@@ -34,7 +40,14 @@ const OnboardingModal = ({ open, onComplete }: OnboardingModalProps) => {
     projectKey: string;
   } | null>(null);
   const addApplication = useAppStore((state) => state.addApplication);
+  const applications = useAppStore((state) => state.applications);
   const user = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    if (open && currentStep === 0 && applications.length > 0) {
+      onCancel?.();
+    }
+  }, [applications.length, currentStep, onCancel, open]);
 
   const generateProjectKey = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -169,15 +182,25 @@ const OnboardingModal = ({ open, onComplete }: OnboardingModalProps) => {
               </Form.Item>
 
               <Form.Item style={{ marginTop: 32 }}>
-                <Button
-                  type="primary"
-                  size="large"
-                  block
-                  loading={loading}
-                  onClick={handleCreateProject}
-                >
-                  Create Project
-                </Button>
+                <Space direction="vertical" style={{ width: "100%" }}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    block
+                    loading={loading}
+                    onClick={handleCreateProject}
+                  >
+                    Create Project
+                  </Button>
+                  <Button
+                    size="large"
+                    block
+                    onClick={() => onCancel?.()}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                </Space>
               </Form.Item>
             </Form>
           </div>

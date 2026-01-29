@@ -17,6 +17,17 @@
   justify-content: space-between;
   width: 100%;
 }
+.ai-range-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-range-label {
+  font-size: 12px;
+}
+.ai-range-select .ant-select-selector {
+  border-radius: 6px !important;
+}
 .ai-title-left {
   display: flex;
   align-items: center;
@@ -258,5 +269,8 @@
   .error-msg-text {
     width: 100%;
     margin-top: 4px;
+  }
+  .ai-range-control {
+    display: none;
   }
 }

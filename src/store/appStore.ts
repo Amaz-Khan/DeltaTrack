@@ -32,9 +32,11 @@ interface AppState {
   applications: Application[];
   selectedApp: Application | null;
   hasCompletedOnboarding: boolean;
+  isLoadingApplications: boolean;
   errors: ErrorEvent[];
   isLoadingErrors: boolean;
   setApplications: (apps: Application[]) => void;
+  setLoadingApplications: (loading: boolean) => void;
   addApplication: (app: Application) => void;
   selectApp: (app: Application | null) => void;
   setOnboardingComplete: () => void;
@@ -49,10 +51,14 @@ export const useAppStore = create<AppState>()(
       applications: [],
       selectedApp: null,
       hasCompletedOnboarding: false,
+      isLoadingApplications: true,
       errors: [],
       isLoadingErrors: false,
 
       setApplications: (applications) => set({ applications }),
+
+      setLoadingApplications: (isLoadingApplications) =>
+        set({ isLoadingApplications }),
 
       addApplication: (app) =>
         set((state) => ({
@@ -74,6 +80,7 @@ export const useAppStore = create<AppState>()(
           applications: [],
           selectedApp: null,
           hasCompletedOnboarding: false,
+          isLoadingApplications: true,
           errors: [],
           isLoadingErrors: false,
         }),

@@ -29,6 +29,9 @@ const DashboardLayout = () => {
   const selectedApp = useAppStore((state) => state.selectedApp);
   const selectApp = useAppStore((state) => state.selectApp);
   const setApplications = useAppStore((state) => state.setApplications);
+  const setLoadingApplications = useAppStore(
+    (state) => state.setLoadingApplications,
+  );
   const resetAppState = useAppStore((state) => state.resetAppState);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -36,6 +39,7 @@ const DashboardLayout = () => {
 
   useEffect(() => {
     const fetchApplications = async () => {
+      setLoadingApplications(true);
       try {
         const response = await apiClient.get("/applications");
         console.log("Raw API response:", response.data);
@@ -73,6 +77,8 @@ const DashboardLayout = () => {
         }
       } catch (e) {
         console.error("Failed to fetch applications:", e);
+      } finally {
+        setLoadingApplications(false);
       }
     };
 
@@ -159,15 +165,7 @@ const DashboardLayout = () => {
             padding: "0 16px",
           }}
         >
-          <Button
-            type="text"
-            icon={<LogoutOutlined />}
-            onClick={handleLogout}
-            block
-            danger
-          >
-            {!collapsed && "Logout"}
-          </Button>
+          <div />
         </div>
       </Sider>
       <Layout>
@@ -187,28 +185,34 @@ const DashboardLayout = () => {
             onClick={() => setCollapsed(!collapsed)}
             style={{ fontSize: 16 }}
           />
-          <Space>
-            <AppstoreOutlined />
-            <Select
-              placeholder="Select Project"
-              value={selectedApp?.id}
-              onChange={handleAppChange}
-              style={{ width: 200 }}
-              options={applications.map((app) => ({
-                value: app.id,
-                label: app.name,
-              }))}
-              notFoundContent="No projects"
-            />
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setShowAddProject(true)}
-            >
-              New Project
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Space>
+              <AppstoreOutlined />
+              <Select
+                placeholder="Select Project"
+                value={selectedApp?.id}
+                onChange={handleAppChange}
+                style={{ width: 200 }}
+                options={applications.map((app) => ({
+                  value: app.id,
+                  label: app.name,
+                }))}
+                notFoundContent="No projects"
+              />
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setShowAddProject(true)}
+              >
+                New Project
+              </Button>
+            </Space>
+          </div>
+          <div style={{ marginLeft: "auto" }}>
+            <Button danger icon={<LogoutOutlined />} onClick={handleLogout}>
+              Logout
             </Button>
-          </Space>
-          <div style={{ width: 32 }} />
+          </div>
         </Header>
         <Content
           style={{
