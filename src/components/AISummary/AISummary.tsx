@@ -304,7 +304,7 @@ const AISummary = ({ applicationId, timeRange = "7d" }: AISummaryProps) => {
                   className="section-icon-v2"
                   style={{ color: "#ef4444" }}
                 />
-                <Text strong>Sample Error Messages</Text>
+                <Text strong>Error Messages</Text>
               </div>
               <div className="error-messages-list">
                 {data.sampleMessages.slice(0, 4).map((msg, index) => {
